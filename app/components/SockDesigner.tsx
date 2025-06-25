@@ -34,10 +34,21 @@ useEffect(() => {
       };
       img.onerror = (e) => {
         console.error('Failed to load default sock image:', e);
+        // Try alternative path if first one fails
+        const fallbackImg = new Image();
+        fallbackImg.onload = () => {
+          shouldRecalculateColors.current = true;
+          setImage(fallbackImg);
+        };
+        fallbackImg.onerror = (fallbackError) => {
+          console.error('Failed to load fallback sock image:', fallbackError);
+        };
+        fallbackImg.src = './images/default-sock.png';
       };
       
-      // Load image from public/images folder
-      img.src = '/images/default-sock.png'; // Adjust filename as needed
+      // Try GitHub Pages path first, then fallback to relative path
+      const basePath = process.env.NODE_ENV === 'production' ? '/SockDesign' : '';
+      img.src = `${basePath}/images/default-sock.png`;
     };
     
     loadDefaultImage();
