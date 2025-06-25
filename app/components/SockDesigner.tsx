@@ -27,28 +27,38 @@ export default function SockDesigner() {
 // Load default sock image on component mount
 useEffect(() => {
     const loadDefaultImage = () => {
-      const img = new Image();
-      img.onload = () => {
-        shouldRecalculateColors.current = true; // New image should recalculate colors
-        setImage(img);
-      };
-      img.onerror = (e) => {
-        console.error('Failed to load default sock image:', e);
-        // Try alternative path if first one fails
-        const fallbackImg = new Image();
-        fallbackImg.onload = () => {
+      // Try multiple possible paths for the image
+      const possiblePaths = [
+        '/SockDesign/images/default-sock.png', // GitHub Pages with base path
+        './images/default-sock.png',           // Relative path
+        '/images/default-sock.png',            // Root path
+        'images/default-sock.png'              // Direct relative
+      ];
+      
+      let currentPathIndex = 0;
+      
+      const tryNextPath = () => {
+        if (currentPathIndex >= possiblePaths.length) {
+          console.error('Failed to load default sock image from all paths');
+          return;
+        }
+        
+        const img = new Image();
+        img.onload = () => {
+          console.log(`Successfully loaded image from: ${possiblePaths[currentPathIndex]}`);
           shouldRecalculateColors.current = true;
-          setImage(fallbackImg);
+          setImage(img);
         };
-        fallbackImg.onerror = (fallbackError) => {
-          console.error('Failed to load fallback sock image:', fallbackError);
+        img.onerror = (e) => {
+          console.log(`Failed to load from ${possiblePaths[currentPathIndex]}, trying next path...`);
+          currentPathIndex++;
+          tryNextPath();
         };
-        fallbackImg.src = './images/default-sock.png';
+        
+        img.src = possiblePaths[currentPathIndex];
       };
       
-      // Try GitHub Pages path first, then fallback to relative path
-      const basePath = process.env.NODE_ENV === 'production' ? '/SockDesign' : '';
-      img.src = `${basePath}/images/default-sock.png`;
+      tryNextPath();
     };
     
     loadDefaultImage();
